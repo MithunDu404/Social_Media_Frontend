@@ -25,7 +25,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user, token, isAuthenticated: true });
   },
 
-
   logout: () => {
     // localStorage.removeItem("token");
     Cookies.remove("token");
@@ -36,7 +35,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   hydrate: () => {
     if (typeof window === "undefined") return;
 
-    // const token = localStorage.getItem("token");
     const token = Cookies.get("token");
     const user = localStorage.getItem("user");
 
@@ -45,6 +43,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         token,
         user: JSON.parse(user),
         isAuthenticated: true,
+        hasHydrated: true,
+      });
+    } else {
+      // 🔑 hydration finished even without auth
+      set({
+        user: null,
+        token: null,
+        isAuthenticated: false,
         hasHydrated: true,
       });
     }

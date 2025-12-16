@@ -18,7 +18,7 @@ export default function ProtectedLayout({
     if (!isAuth) router.push("/login");
   }, [hasHydrated,isAuth]);
 
-  // if(!hasHydrated) return null;
+  if(!hasHydrated) return null;
 
   return <>{children}</>;
 }
