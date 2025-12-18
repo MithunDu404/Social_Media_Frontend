@@ -3,6 +3,7 @@
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Navbar from "@/components/common/navbar";
 
 export default function ProtectedLayout({
   children,
@@ -20,5 +21,11 @@ export default function ProtectedLayout({
 
   if(!hasHydrated) return null;
 
-  return <>{children}</>;
+  return(
+    <>
+      <Navbar/>
+      {children}
+    </>
+
+  )
 }

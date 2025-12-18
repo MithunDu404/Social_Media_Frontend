@@ -7,6 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { loginUser } from "@/lib/auth";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
+import Link from "next/link"
+import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -57,6 +59,16 @@ export default function LoginPage() {
           >
             {loading ? "Logging in..." : "Login"}
           </Button>
+
+          <GoogleLoginButton />
+          
+          <p className="text-center text-sm text-muted-foreground">
+            Don’t have an account?{" "}
+            <Link href="/register" className="font-medium text-primary hover:underline">
+              Register
+            </Link>
+          </p>
+
         </CardContent>
       </Card>
     </div>
