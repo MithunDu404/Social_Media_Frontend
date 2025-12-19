@@ -25,8 +25,12 @@ export default function ProtectedLayout({
 
   return(
     <>
-      <Navbar/>
-      {children}
+      <div className="flex h-screen flex-col">
+        <Navbar />
+        <div className="flex-1 overflow-hidden">
+          {children}
+        </div>
+      </div>
     </>
 
   )

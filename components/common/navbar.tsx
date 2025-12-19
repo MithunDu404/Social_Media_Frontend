@@ -68,7 +68,7 @@ export default function Navbar() {
   );
 
   return (
-    <nav className="border-b bg-background">
+    <nav className="sticky top-0 z-50 border-b bg-background">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         
         {/* Left */}

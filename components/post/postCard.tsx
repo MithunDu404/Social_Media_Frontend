@@ -72,12 +72,20 @@ export default function PostCard({ post, onLike }: Props) {
           onClick={onLike}
           className="flex items-center gap-1"
         >
-          <Heart size={16} className="fill-red-500 text-red-500" />
-          {post._count.likes}
+          <Heart
+            size={16}
+            className={
+              post.isLiked
+                ? "fill-red-500 text-red-500"
+                : "text-muted-foreground"
+            }
+          />
+          {post.likeCount}
         </Button>
 
+
         <span className="text-sm text-muted-foreground">
-          {post._count.comments} comments
+          {post.commentCount} comments
         </span>
       </div>
     </div>

@@ -21,10 +21,8 @@ export interface Post {
     picture_url: string;
   };
 
-  _count: {
-    likes: number;
-    comments: number;
-  };
+  commentCount: number;
+  likeCount: number;
 
   isLiked: Boolean;
 }

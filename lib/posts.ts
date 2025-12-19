@@ -7,10 +7,7 @@ export const fetchPosts = async (): Promise<Post[]> => {
   return res.data;
 };
 
-export const likePost = async (postId: number) => {
-  await api.post(`/posts/${postId}/like`);
-};
-
-export const unlikePost = async (postId: number) => {
-  await api.delete(`/posts/${postId}/like`);
+export const toggleLikePost = async (postId: number) => {
+  console.log("api triggered")
+  await api.post(`/likes/post/${postId}`);
 };
