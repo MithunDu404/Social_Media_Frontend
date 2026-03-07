@@ -1,7 +1,7 @@
 "use client";
 
 import { GoogleLogin } from "@react-oauth/google";
-import api from "@/lib/api";
+import { registerWithGoogle } from "@/lib/auth";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 
@@ -12,12 +12,14 @@ export default function GoogleLoginButton() {
   return (
     <GoogleLogin
       onSuccess={async (credentialResponse) => {
-        const res = await api.post("/auth/google", {
-          credential: credentialResponse.credential,
-        });
-
-        login(res.data.user, res.data.token);
-        router.push("/feed");
+        try {
+          if (!credentialResponse.credential) return;
+          const data = await registerWithGoogle(credentialResponse.credential);
+          login(data.user, data.token);
+          router.push("/feed");
+        } catch {
+          alert("Google sign-in failed. Please try again.");
+        }
       }}
       onError={() => {
         alert("Google Login Failed");

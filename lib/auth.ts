@@ -1,11 +1,8 @@
 import api from "./api";
-import { AuthResponse } from "@/types/auth";
+import { AuthResponse, User } from "@/types/auth";
 
 export const loginUser = async (email: string, password: string) => {
-  const res = await api.post<AuthResponse>("/auth/login", {
-    email,
-    password,
-  });
+  const res = await api.post<AuthResponse>("/auth/login", { email, password });
   return res.data;
 };
 
@@ -19,5 +16,17 @@ export const registerUser = async (
     email,
     password,
   });
+  return res.data;
+};
+
+export const registerWithGoogle = async (credential: string) => {
+  const res = await api.post<AuthResponse>("/auth/registerUserGoogle", {
+    credential,
+  });
+  return res.data;
+};
+
+export const getMe = async (): Promise<User> => {
+  const res = await api.get<User>("/auth/me");
   return res.data;
 };

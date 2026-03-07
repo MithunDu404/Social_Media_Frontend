@@ -2,7 +2,7 @@
 // Need Changes
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, LogOut, MessageCircle, Home, User } from "lucide-react";
+import { Menu, LogOut, MessageCircle, Home, User, Bell } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -45,9 +45,8 @@ export default function Navbar() {
     <>
       <Link
         href="/feed"
-        className={`flex items-center gap-2 text-sm font-medium ${
-          pathname === "/feed" ? "text-black" : "text-muted-foreground"
-        }`}
+        className={`flex items-center gap-2 text-sm font-medium ${pathname === "/feed" ? "text-black" : "text-muted-foreground"
+          }`}
       >
         <Home size={18} />
         Feed
@@ -55,14 +54,24 @@ export default function Navbar() {
 
       <Link
         href="/messages"
-        className={`flex items-center gap-2 text-sm font-medium ${
-          pathname.startsWith("/messages")
+        className={`flex items-center gap-2 text-sm font-medium ${pathname.startsWith("/messages")
             ? "text-black"
             : "text-muted-foreground"
-        }`}
+          }`}
       >
         <MessageCircle size={18} />
         Messages
+      </Link>
+
+      <Link
+        href="/notifications"
+        className={`flex items-center gap-2 text-sm font-medium ${pathname.startsWith("/notifications")
+            ? "text-black"
+            : "text-muted-foreground"
+          }`}
+      >
+        <Bell size={18} />
+        Notifications
       </Link>
     </>
   );
@@ -70,7 +79,7 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b bg-background">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        
+
         {/* Left */}
         <div className="flex items-center gap-4">
           {/* Mobile menu */}

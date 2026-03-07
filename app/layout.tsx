@@ -1,32 +1,25 @@
-"use client"
-
+import type { Metadata } from "next";
 import "./globals.css";
-import { useEffect } from "react";
-import { useAuthStore } from "@/store/authStore";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import { Providers } from './providers'
+import { Providers } from "./providers";
+import { AuthHydrator } from "@/components/auth/AuthHydrator";
 
-// export const metadata = {
-//   title: "Social Media App",
-//   description: "Next.js Social Media App",
-// };
+export const metadata: Metadata = {
+  title: "SocialApp",
+  description: "A modern social media platform",
+};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const hydrate = useAuthStore((s) => s.hydrate);
-
-  useEffect(() => {
-    hydrate();
-  }, []);
-
   return (
     <html lang="en">
       <body className="min-h-screen bg-background text-foreground">
         <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
           <Providers>
+            <AuthHydrator />
             {children}
           </Providers>
         </GoogleOAuthProvider>
