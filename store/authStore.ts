@@ -11,6 +11,7 @@ interface AuthState {
   login: (user: User, token: string) => void;
   logout: () => void;
   hydrate: () => void;
+  updateUser: (partial: Partial<User>) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -26,10 +27,18 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
-    // localStorage.removeItem("token");
     Cookies.remove("token");
     localStorage.removeItem("user");
     set({ user: null, token: null, isAuthenticated: false });
+  },
+
+  updateUser: (partial) => {
+    set((state) => {
+      if (!state.user) return {};
+      const updated = { ...state.user, ...partial };
+      localStorage.setItem("user", JSON.stringify(updated));
+      return { user: updated };
+    });
   },
 
   hydrate: () => {

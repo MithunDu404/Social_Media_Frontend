@@ -49,7 +49,12 @@ export default function PostCard({ post, onLike, onDelete }: Props) {
           </div>
           <div>
             <p className="text-sm font-semibold group-hover:underline">{post.user.user_name}</p>
-            <p className="text-xs text-muted-foreground">{timeAgo(post.createdAt)}</p>
+            <p className="text-xs text-muted-foreground">
+              {timeAgo(post.createdAt)}
+              {new Date(post.updatedAt).getTime() - new Date(post.createdAt).getTime() > 5000 && (
+                <span className="ml-1.5 text-xs text-muted-foreground/70 italic">· Edited {timeAgo(post.updatedAt)} ago</span>
+              )}
+            </p>
           </div>
         </Link>
 

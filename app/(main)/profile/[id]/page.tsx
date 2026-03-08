@@ -17,20 +17,23 @@ import PostCard from "@/components/post/postCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, MessageCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Edit2, MapPin, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { Post } from "@/types/post";
+import { User } from "@/types/auth";
 
 export default function UserProfilePage() {
     const params = useParams();
     const userId = Number(params.id);
     const loggedUser = useAuthStore((s) => s.user);
+    const updateUser = useAuthStore((s) => s.updateUser);
     const queryClient = useQueryClient();
     const [editOpen, setEditOpen] = useState(false);
     const [editName, setEditName] = useState("");
     const [editAbout, setEditAbout] = useState("");
     const [editLocation, setEditLocation] = useState("");
+    const [followModal, setFollowModal] = useState<"followers" | "following" | null>(null);
 
     const { data: profile, isLoading } = useQuery({
         queryKey: ["user", userId],
@@ -72,6 +75,15 @@ export default function UserProfilePage() {
             }
             return { prev };
         },
+        onSuccess: (data) => {
+            // Keep the feed suggestion list in sync: update isFollowing for this user
+            // so when the user navigates back to the feed, the stale cache is correct
+            queryClient.setQueryData<User[]>(["suggestedUsers"], (old) =>
+                old?.map((u) =>
+                    u.id === userId ? { ...u, isFollowing: data.following } : u
+                )
+            );
+        },
         onError: (_, __, ctx) => {
             if (ctx?.prev) queryClient.setQueryData(["followers", userId], ctx.prev);
         },
@@ -83,7 +95,12 @@ export default function UserProfilePage() {
     const updateMutation = useMutation({
         mutationFn: () => updateProfile(userId, { user_name: editName, about: editAbout, location: editLocation }),
         onSuccess: (updated) => {
+            // Update the profile query cache with the real user fields
             queryClient.setQueryData(["user", userId], (old: any) => ({ ...old, ...updated }));
+            // If editing own profile, keep the auth store + localStorage in sync too
+            if (isOwnProfile) {
+                updateUser({ user_name: updated.user_name, picture_url: updated.picture_url });
+            }
             setEditOpen(false);
         },
     });
@@ -144,66 +161,47 @@ export default function UserProfilePage() {
             {/* Profile Header */}
             <div className="rounded-xl border bg-card p-6 space-y-5">
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-                    <div className="h-24 w-24 shrink-0 rounded-full bg-muted flex items-center justify-center text-3xl font-bold overflow-hidden">
-                        {profile.picture_url ? (
-                            <img src={profile.picture_url} alt={profile.user_name} className="w-full h-full object-cover" />
-                        ) : (
-                            profile.user_name.charAt(0).toUpperCase()
+                    {/* Avatar with pencil icon overlay for own profile */}
+                    <div className="relative shrink-0">
+                        <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center text-3xl font-bold overflow-hidden">
+                            {profile.picture_url ? (
+                                <img src={profile.picture_url} alt={profile.user_name} className="w-full h-full object-cover" />
+                            ) : (
+                                profile.user_name.charAt(0).toUpperCase()
+                            )}
+                        </div>
+                        {isOwnProfile && (
+                            <button
+                                onClick={() => { setEditName(profile.user_name); setEditAbout(profile.about ?? ""); setEditLocation(profile.location ?? ""); setEditOpen(true); }}
+                                className="absolute top-0 right-0 h-7 w-7 rounded-full bg-background border border-border shadow flex items-center justify-center hover:bg-muted transition-colors"
+                                title="Edit profile"
+                            >
+                                <Edit2 size={13} />
+                            </button>
                         )}
                     </div>
 
-                    <div className="flex-1 text-center sm:text-left space-y-2">
+                    <div className="flex-1 text-center sm:text-left space-y-1">
                         <div className="flex flex-col sm:flex-row items-center gap-3">
                             <h1 className="text-2xl font-bold">{profile.user_name}</h1>
-                            <div className="flex gap-2">
-                                {isOwnProfile ? (
-                                    <Dialog open={editOpen} onOpenChange={(o) => {
-                                        setEditOpen(o);
-                                        if (o) { setEditName(profile.user_name); setEditAbout(profile.about ?? ""); setEditLocation(profile.location ?? ""); }
-                                    }}>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" size="sm">Edit Profile</Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader><DialogTitle>Edit Profile</DialogTitle></DialogHeader>
-                                            <div className="space-y-4">
-                                                <div className="space-y-1.5">
-                                                    <label className="text-sm font-medium">Username</label>
-                                                    <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
-                                                </div>
-                                                <div className="space-y-1.5">
-                                                    <label className="text-sm font-medium">Bio</label>
-                                                    <Textarea rows={3} value={editAbout} onChange={(e) => setEditAbout(e.target.value)} placeholder="Tell us about yourself..." />
-                                                </div>
-                                                <div className="space-y-1.5">
-                                                    <label className="text-sm font-medium">Location</label>
-                                                    <Input value={editLocation} onChange={(e) => setEditLocation(e.target.value)} placeholder="City, Country" />
-                                                </div>
-                                                <Button className="w-full" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
-                                                    {updateMutation.isPending ? "Saving..." : "Save Changes"}
-                                                </Button>
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
-                                ) : (
-                                    <>
-                                        <Button
-                                            variant={isFollowing ? "outline" : "default"}
-                                            size="sm"
-                                            onClick={() => followMutation.mutate()}
-                                            disabled={followMutation.isPending}
-                                        >
-                                            {followMutation.isPending ? "..." : isFollowing ? "Unfollow" : "Follow"}
-                                        </Button>
-                                        <Button variant="outline" size="sm" asChild>
-                                            <Link href={`/messages?userId=${userId}`}>
-                                                <MessageCircle size={14} className="mr-1.5" />
-                                                Message
-                                            </Link>
-                                        </Button>
-                                    </>
-                                )}
-                            </div>
+                            {!isOwnProfile && (
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant={isFollowing ? "outline" : "default"}
+                                        size="sm"
+                                        onClick={() => followMutation.mutate()}
+                                        disabled={followMutation.isPending}
+                                    >
+                                        {followMutation.isPending ? "..." : isFollowing ? "Unfollow" : "Follow"}
+                                    </Button>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href={`/messages?userId=${userId}`}>
+                                            <MessageCircle size={14} className="mr-1.5" />
+                                            Message
+                                        </Link>
+                                    </Button>
+                                </div>
+                            )}
                         </div>
 
                         {profile.about && <p className="text-sm text-muted-foreground">{profile.about}</p>}
@@ -216,8 +214,18 @@ export default function UserProfilePage() {
 
                         <div className="flex justify-center sm:justify-start gap-6 text-sm font-medium pt-1">
                             <span><strong>{posts?.length ?? 0}</strong> posts</span>
-                            <span><strong>{followerCount}</strong> followers</span>
-                            <span><strong>{followingCount}</strong> following</span>
+                            <button
+                                onClick={() => setFollowModal("followers")}
+                                className="hover:underline cursor-pointer text-left"
+                            >
+                                <strong>{followerCount}</strong> followers
+                            </button>
+                            <button
+                                onClick={() => setFollowModal("following")}
+                                className="hover:underline cursor-pointer text-left"
+                            >
+                                <strong>{followingCount}</strong> following
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -247,6 +255,72 @@ export default function UserProfilePage() {
                     </div>
                 )}
             </div>
+
+            {/* Edit Profile Dialog */}
+            {isOwnProfile && (
+                <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                    <DialogContent>
+                        <DialogHeader><DialogTitle>Edit Profile</DialogTitle></DialogHeader>
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium">Username</label>
+                                <Input value={editName} onChange={(e) => setEditName(e.target.value)} />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium">Bio</label>
+                                <Textarea rows={3} value={editAbout} onChange={(e) => setEditAbout(e.target.value)} placeholder="Tell us about yourself..." />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium">Location</label>
+                                <Input value={editLocation} onChange={(e) => setEditLocation(e.target.value)} placeholder="City, Country" />
+                            </div>
+                            <Button className="w-full" onClick={() => updateMutation.mutate()} disabled={updateMutation.isPending}>
+                                {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {/* Followers / Following Modal */}
+            <Dialog open={followModal !== null} onOpenChange={(o) => !o && setFollowModal(null)}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="capitalize">{followModal}</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-1 max-h-80 overflow-y-auto pr-1">
+                        {(() => {
+                            const list = followModal === "followers"
+                                ? followersData?.users
+                                : followingsData?.users;
+                            if (!list || list.length === 0) {
+                                return (
+                                    <p className="text-sm text-muted-foreground text-center py-6">
+                                        No {followModal} yet.
+                                    </p>
+                                );
+                            }
+                            return list.map((u) => (
+                                <Link
+                                    key={u.id}
+                                    href={`/profile/${u.id}`}
+                                    onClick={() => setFollowModal(null)}
+                                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
+                                >
+                                    <div className="h-9 w-9 shrink-0 rounded-full bg-muted flex items-center justify-center font-bold text-sm overflow-hidden">
+                                        {u.picture_url ? (
+                                            <img src={u.picture_url} alt={u.user_name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            u.user_name.charAt(0).toUpperCase()
+                                        )}
+                                    </div>
+                                    <span className="text-sm font-medium">{u.user_name}</span>
+                                </Link>
+                            ));
+                        })()}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

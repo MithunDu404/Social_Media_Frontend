@@ -7,6 +7,7 @@ export interface User {
   dob?: string | null;
   location?: string | null;
   about?: string | null;
+  isFollowing?: boolean;
 }
 
 export interface AuthResponse {

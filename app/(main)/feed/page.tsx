@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Post } from "@/types/post";
+import { User } from "@/types/auth";
 
 function FeedSkeleton() {
   return (
@@ -45,6 +46,8 @@ export default function FeedPage() {
   const { data: suggestedUsers } = useQuery({
     queryKey: ["suggestedUsers"],
     queryFn: () => searchUsers(),
+    // Don't refetch within 2 minutes so the optimistic cache update isn't stomped
+    staleTime: 2 * 60 * 1000,
   });
 
   const likeMutation = useMutation({
@@ -77,13 +80,38 @@ export default function FeedPage() {
 
   const followMutation = useMutation({
     mutationFn: (userId: number) => toggleFollow(userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["suggestedUsers"] });
+    onMutate: async (userId) => {
+      // Cancel any in-flight refetch so it doesn't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ["suggestedUsers"] });
+      const previous = queryClient.getQueryData<User[]>(["suggestedUsers"]);
+      // Optimistic update: immediately flip isFollowing in the cache
+      queryClient.setQueryData<User[]>(["suggestedUsers"], (old) =>
+        old?.map((u) =>
+          u.id === userId ? { ...u, isFollowing: !u.isFollowing } : u
+        )
+      );
+      return { previous };
+    },
+    onSuccess: (data, userId) => {
+      // Permanently write the server-confirmed value so future refetches
+      // don't clobber the state (data.following is the source of truth)
+      queryClient.setQueryData<User[]>(["suggestedUsers"], (old) =>
+        old?.map((u) =>
+          u.id === userId ? { ...u, isFollowing: data.following } : u
+        )
+      );
+    },
+    onError: (_, __, context) => {
+      // Roll back on failure
+      queryClient.setQueryData(["suggestedUsers"], context?.previous);
     },
   });
 
-  // Filter out own user from suggestions
-  const suggestions = suggestedUsers?.filter((u) => u.id !== user?.id).slice(0, 6) ?? [];
+  // Filter out own user and already-followed users from suggestions
+  const suggestions =
+    suggestedUsers
+      ?.filter((u) => u.id !== user?.id && !u.isFollowing)
+      .slice(0, 6) ?? [];
 
   return (
     <div className="mx-auto max-w-7xl h-full overflow-x-hidden md:p-2 p-4">
@@ -157,11 +185,14 @@ export default function FeedPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-primary font-semibold h-auto py-1 px-2 text-xs"
+                      className={`h-auto py-1 px-2 text-xs font-semibold ${u.isFollowing
+                        ? "text-muted-foreground"
+                        : "text-primary"
+                        }`}
                       onClick={() => followMutation.mutate(u.id)}
                       disabled={followMutation.isPending}
                     >
-                      Follow
+                      {u.isFollowing ? "Unfollow" : "Follow"}
                     </Button>
                   </div>
                 ))

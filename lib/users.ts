@@ -54,5 +54,6 @@ export const updateProfile = async (
     }
 ): Promise<UserProfile> => {
     const res = await api.put(`/users/${userId}`, data);
-    return res.data;
+    // Backend returns { message, user } — extract the user object
+    return res.data.user ?? res.data;
 };
