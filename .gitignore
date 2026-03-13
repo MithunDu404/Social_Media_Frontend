@@ -43,3 +43,5 @@ next-env.d.ts
 # txt
 googleAuth.md
 design.md
+media_upload.md
+media_upload_prod.md

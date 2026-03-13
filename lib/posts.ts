@@ -41,3 +41,12 @@ export const updatePost = async (postId: number, data: { title?: string; blog?: 
 export const deletePost = async (postId: number) => {
   await api.delete(`/posts/${postId}`);
 };
+
+// POST /posts/:postId/media — attach uploaded media to a post
+export const addMediaToPost = async (
+  postId: number,
+  media: { url: string; content_type: string; size: number },
+) => {
+  const res = await api.post(`/posts/${postId}/media`, media);
+  return res.data;
+};

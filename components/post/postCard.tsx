@@ -42,7 +42,7 @@ export default function PostCard({ post, onLike, onDelete }: Props) {
         <Link href={`/profile/${post.user.id}`} className="flex items-center gap-2.5 group">
           <div className="h-9 w-9 shrink-0 rounded-full bg-muted flex items-center justify-center text-sm font-bold overflow-hidden">
             {post.user.picture_url ? (
-              <img src={post.user.picture_url} alt="" className="w-full h-full object-cover" />
+              <img src={post.user.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             ) : (
               post.user.user_name.charAt(0).toUpperCase()
             )}

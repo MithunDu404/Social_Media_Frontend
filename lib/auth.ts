@@ -20,7 +20,7 @@ export const registerUser = async (
 };
 
 export const registerWithGoogle = async (credential: string) => {
-  const res = await api.post<AuthResponse>("/auth/registerUserGoogle", {
+  const res = await api.post<AuthResponse>("/auth/google", {
     credential,
   });
   return res.data;

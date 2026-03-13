@@ -26,7 +26,7 @@ function UserAvatar({ name, picture_url, size = "sm" }: { name: string; picture_
     return (
         <div className={`${sz} shrink-0 rounded-full bg-muted flex items-center justify-center font-bold overflow-hidden`}>
             {picture_url ? (
-                <img src={picture_url} alt="" className="w-full h-full object-cover" />
+                <img src={picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             ) : (
                 name.charAt(0).toUpperCase()
             )}

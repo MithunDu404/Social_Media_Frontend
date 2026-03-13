@@ -126,7 +126,7 @@ export default function NotificationsPage() {
                                 {/* Avatar */}
                                 <div className="h-9 w-9 shrink-0 rounded-full bg-muted flex items-center justify-center text-xs font-bold overflow-hidden">
                                     {notif.creator?.picture_url ? (
-                                        <img src={notif.creator.picture_url} alt="" className="w-full h-full object-cover" />
+                                        <img src={notif.creator.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                     ) : (
                                         notif.creator?.user_name?.charAt(0).toUpperCase() ?? "?"
                                     )}

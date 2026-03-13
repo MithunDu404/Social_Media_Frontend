@@ -17,7 +17,7 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { useAuthStore } from "@/store/authStore";
 
@@ -141,6 +141,11 @@ export default function Navbar() {
 
               {/* Avatar */}
               <Avatar>
+                <AvatarImage
+                  src={user?.picture_url ?? undefined}
+                  alt={user?.user_name ?? ""}
+                  referrerPolicy="no-referrer"
+                />
                 <AvatarFallback>
                   {user?.user_name?.[0]?.toUpperCase()}
                 </AvatarFallback>

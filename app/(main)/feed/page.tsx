@@ -122,7 +122,7 @@ export default function FeedPage() {
           <div className="sticky top-3 rounded-xl border p-4 flex flex-col items-center gap-4 bg-card">
             <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center text-2xl font-bold overflow-hidden">
               {user?.picture_url ? (
-                <img src={user.picture_url} alt="" className="w-full h-full object-cover" />
+                <img src={user.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
                 user?.user_name?.charAt(0).toUpperCase()
               )}
@@ -172,7 +172,7 @@ export default function FeedPage() {
                   <div key={u.id} className="flex items-center gap-2.5">
                     <Link href={`/profile/${u.id}`} className="h-8 w-8 shrink-0 rounded-full bg-muted flex items-center justify-center text-xs font-bold overflow-hidden">
                       {u.picture_url ? (
-                        <img src={u.picture_url} alt="" className="w-full h-full object-cover" />
+                        <img src={u.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
                         u.user_name?.charAt(0).toUpperCase()
                       )}

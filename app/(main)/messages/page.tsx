@@ -118,7 +118,7 @@ export default function MessagesPage() {
               >
                 <div className="h-10 w-10 shrink-0 rounded-full bg-muted flex items-center justify-center font-bold text-sm overflow-hidden">
                   {conv.user.picture_url ? (
-                    <img src={conv.user.picture_url} className="w-full h-full object-cover" alt="" />
+                    <img src={conv.user.picture_url} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
                   ) : (
                     conv.user.user_name.charAt(0).toUpperCase()
                   )}
@@ -146,7 +146,7 @@ export default function MessagesPage() {
             </Button>
             <div className="h-8 w-8 shrink-0 rounded-full bg-muted flex items-center justify-center text-xs font-bold overflow-hidden">
               {selectedConv?.user.picture_url ? (
-                <img src={selectedConv.user.picture_url} alt="" className="w-full h-full object-cover" />
+                <img src={selectedConv.user.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
                 (selectedConv?.user.user_name ?? "?").charAt(0).toUpperCase()
               )}

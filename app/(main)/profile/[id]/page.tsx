@@ -165,7 +165,7 @@ export default function UserProfilePage() {
                     <div className="relative shrink-0">
                         <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center text-3xl font-bold overflow-hidden">
                             {profile.picture_url ? (
-                                <img src={profile.picture_url} alt={profile.user_name} className="w-full h-full object-cover" />
+                                <img src={profile.picture_url} alt={profile.user_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             ) : (
                                 profile.user_name.charAt(0).toUpperCase()
                             )}
@@ -309,7 +309,7 @@ export default function UserProfilePage() {
                                 >
                                     <div className="h-9 w-9 shrink-0 rounded-full bg-muted flex items-center justify-center font-bold text-sm overflow-hidden">
                                         {u.picture_url ? (
-                                            <img src={u.picture_url} alt={u.user_name} className="w-full h-full object-cover" />
+                                            <img src={u.picture_url} alt={u.user_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                         ) : (
                                             u.user_name.charAt(0).toUpperCase()
                                         )}

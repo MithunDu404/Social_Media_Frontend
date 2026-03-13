@@ -101,7 +101,7 @@ export default function PostDetailPage() {
                     <Link href={`/profile/${post.user.id}`} className="flex items-center gap-2.5 group">
                         <div className="h-10 w-10 rounded-full bg-muted overflow-hidden flex items-center justify-center font-bold">
                             {post.user.picture_url ? (
-                                <img src={post.user.picture_url} alt="" className="w-full h-full object-cover" />
+                                <img src={post.user.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             ) : (
                                 post.user.user_name.charAt(0).toUpperCase()
                             )}
