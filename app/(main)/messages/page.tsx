@@ -7,8 +7,10 @@ import {
   getConversations,
   getConversationWithUser,
   sendMessage,
+  markMessageAsRead,
   Message,
 } from "@/lib/messages";
+import { getUserProfile } from "@/lib/users";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,12 +47,52 @@ export default function MessagesPage() {
     refetchInterval: 3000,
   });
 
+  // Fetch target user profile if we don't have a conversation with them yet
+  const selectedConv = conversations?.find((c) => c.user.id === selectedUserId);
+  const { data: targetUser } = useQuery({
+    queryKey: ["user", selectedUserId],
+    queryFn: () => getUserProfile(selectedUserId!),
+    enabled: !!selectedUserId && !selectedConv,
+  });
+
+  // Mark unread messages as read when they are displayed
+  useEffect(() => {
+    if (messages && loggedUser && selectedUserId) {
+      const unreadMessages = messages.filter(
+        (m) => m.receiver_id === loggedUser.id && !m.is_read
+      );
+
+      if (unreadMessages.length > 0) {
+        // Optimistically update local state first to prevent multiple calls
+        queryClient.setQueryData<Message[]>(["messages", selectedUserId], (old) =>
+          old?.map((m) => (m.receiver_id === loggedUser.id && !m.is_read ? { ...m, is_read: true } : m))
+        );
+
+        // Also update the conversation list optimisticly if it's the last message
+        queryClient.setQueryData<any[]>(["conversations"], (old) =>
+          old?.map((c) => {
+             if (c.user.id === selectedUserId && c.lastMessage.receiver_id === loggedUser.id && !c.lastMessage.is_read) {
+                 return { ...c, lastMessage: { ...c.lastMessage, is_read: true } };
+             }
+             return c;
+          })
+        );
+
+        // Send backend requests
+        unreadMessages.forEach((msg) => {
+          markMessageAsRead(msg.id).catch(console.error);
+        });
+      }
+    }
+  }, [messages, loggedUser, selectedUserId, queryClient]);
+
+
   const sendMutation = useMutation({
-    mutationFn: () => sendMessage(selectedUserId!, newMessage),
-    onMutate: async () => {
+    mutationFn: (text: string) => sendMessage(selectedUserId!, text),
+    onMutate: async (text) => {
       const optimistic: Message = {
         id: -Date.now(),
-        message: newMessage,
+        message: text,
         sender_id: loggedUser!.id,
         receiver_id: selectedUserId!,
         is_read: false,
@@ -80,10 +122,10 @@ export default function MessagesPage() {
 
   const handleSend = () => {
     if (!newMessage.trim() || !selectedUserId) return;
-    sendMutation.mutate();
+    sendMutation.mutate(newMessage);
   };
 
-  const selectedConv = conversations?.find((c) => c.user.id === selectedUserId);
+  const displayUser = selectedConv?.user || targetUser;
 
   return (
     <div className="flex h-[calc(100vh-56px)] overflow-hidden border-t bg-background">
@@ -110,28 +152,38 @@ export default function MessagesPage() {
               No conversations yet.
             </div>
           ) : (
-            conversations.map((conv) => (
-              <div
-                key={conv.user.id}
-                onClick={() => setSelectedUserId(conv.user.id)}
-                className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/50 transition rounded-none ${selectedUserId === conv.user.id ? "bg-muted/60" : ""}`}
-              >
-                <div className="h-10 w-10 shrink-0 rounded-full bg-muted flex items-center justify-center font-bold text-sm overflow-hidden">
-                  {conv.user.picture_url ? (
-                    <img src={conv.user.picture_url} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
-                  ) : (
-                    conv.user.user_name.charAt(0).toUpperCase()
+            conversations.map((conv) => {
+              const isUnread = conv.lastMessage.receiver_id === loggedUser?.id && !conv.lastMessage.is_read;
+              
+              return (
+                <div
+                  key={conv.user.id}
+                  onClick={() => setSelectedUserId(conv.user.id)}
+                  className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/50 transition rounded-none relative ${selectedUserId === conv.user.id ? "bg-muted/60" : ""}`}
+                >
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-muted flex items-center justify-center font-bold text-sm overflow-hidden">
+                    {conv.user.picture_url ? (
+                      <img src={conv.user.picture_url} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
+                    ) : (
+                      conv.user.user_name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 pr-4">
+                    <p className={`font-medium text-sm truncate ${isUnread ? 'text-foreground' : ''}`}>{conv.user.user_name}</p>
+                    <p className={`text-xs truncate ${isUnread ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}>
+                      {conv.lastMessage.message}
+                    </p>
+                  </div>
+                  <span className={`text-xs shrink-0 ${isUnread ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                    {timeAgo(conv.lastMessage.createdAt)}
+                  </span>
+                  
+                  {isUnread && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-primary rounded-full"></div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{conv.user.user_name}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {conv.lastMessage.message}
-                  </p>
-                </div>
-                <span className="text-xs text-muted-foreground shrink-0">{timeAgo(conv.lastMessage.createdAt)}</span>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
@@ -145,14 +197,14 @@ export default function MessagesPage() {
               <ArrowLeft size={16} />
             </Button>
             <div className="h-8 w-8 shrink-0 rounded-full bg-muted flex items-center justify-center text-xs font-bold overflow-hidden">
-              {selectedConv?.user.picture_url ? (
-                <img src={selectedConv.user.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              {displayUser?.picture_url ? (
+                <img src={displayUser.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
-                (selectedConv?.user.user_name ?? "?").charAt(0).toUpperCase()
+                (displayUser?.user_name ?? "?").charAt(0).toUpperCase()
               )}
             </div>
-            <Button variant="link" className="font-semibold p-0 h-auto" asChild>
-              <Link href={`/profile/${selectedUserId}`}>{selectedConv?.user.user_name ?? "Chat"}</Link>
+            <Button variant="link" className="font-semibold p-0 h-auto" asChild disabled={!displayUser}>
+              <Link href={`/profile/${selectedUserId}`}>{displayUser?.user_name ?? "Loading..."}</Link>
             </Button>
           </div>
 
@@ -163,8 +215,15 @@ export default function MessagesPage() {
                 Loading messages...
               </div>
             ) : !messages || messages.length === 0 ? (
-              <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
-                Start the conversation
+              <div className="flex h-full flex-col items-center justify-center text-muted-foreground text-sm space-y-3">
+                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-2xl font-bold overflow-hidden">
+                   {displayUser?.picture_url ? (
+                    <img src={displayUser.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    (displayUser?.user_name ?? "?").charAt(0).toUpperCase()
+                  )}
+                </div>
+                <p>Start the conversation with {displayUser?.user_name || "this user"}</p>
               </div>
             ) : (
               messages.map((msg) => {
@@ -173,9 +232,14 @@ export default function MessagesPage() {
                   <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[70%] rounded-2xl px-4 py-2 text-sm ${isMine ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted rounded-bl-sm"}`}>
                       <p className="break-words">{msg.message}</p>
-                      <p className={`text-xs mt-1 ${isMine ? "text-primary-foreground/60 text-right" : "text-muted-foreground"}`}>
-                        {timeAgo(msg.createdAt)}
-                      </p>
+                      <div className={`flex items-center gap-1 mt-1 justify-end ${isMine ? "text-primary-foreground/60 text-right" : "text-muted-foreground"}`}>
+                        <span className="text-[10px]">{timeAgo(msg.createdAt)}</span>
+                        {isMine && (
+                          <span className="text-[10px] ml-1">
+                            {msg.is_read ? '· Read' : '· Sent'}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
