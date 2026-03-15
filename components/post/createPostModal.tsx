@@ -41,7 +41,6 @@ export default function CreatePostModal() {
 
   const queryClient = useQueryClient();
 
-  // ── helpers ──────────────────────────────────────────
   const addFiles = useCallback(
     (incoming: FileList | File[]) => {
       setError("");
@@ -92,7 +91,6 @@ export default function CreatePostModal() {
     setError("");
   };
 
-  // ── drag & drop ─────────────────────────────────────
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -106,12 +104,10 @@ export default function CreatePostModal() {
     }
   };
 
-  // ── mutations ───────────────────────────────────────
   const createMutation = useMutation({
     mutationFn: async () => {
       setIsUploading(true);
 
-      // 1) Upload files to Cloudinary (if any)
       let uploaded: UploadResult[] = [];
       if (files.length > 0) {
         uploaded = await uploadMultipleToCloudinary(
@@ -120,11 +116,9 @@ export default function CreatePostModal() {
         );
       }
 
-      // 2) Create the post on our backend
       const postData = await createPost({ title, blog });
       const postId: number = postData.post.id;
 
-      // 3) Attach each media to the post
       for (const media of uploaded) {
         await addMediaToPost(postId, media);
       }
@@ -165,12 +159,12 @@ export default function CreatePostModal() {
       }}
     >
       <DialogTrigger asChild>
-        <Button className="w-full" size="lg">
+        <Button className="w-full transition-all duration-300 hover:shadow-lg hover:shadow-primary/25" size="lg">
           Create Post
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg glass-card border-0">
         <DialogHeader>
           <DialogTitle>Create a post</DialogTitle>
         </DialogHeader>
@@ -178,7 +172,7 @@ export default function CreatePostModal() {
         <div className="space-y-4">
           {/* Error */}
           {error && (
-            <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-2.5 text-sm text-destructive">
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-2.5 text-sm text-destructive animate-fade-in">
               {error}
             </div>
           )}
@@ -189,6 +183,7 @@ export default function CreatePostModal() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             disabled={isBusy}
+            className="bg-background/50 backdrop-blur-sm"
           />
 
           {/* Blog content */}
@@ -198,6 +193,7 @@ export default function CreatePostModal() {
             onChange={(e) => setBlog(e.target.value)}
             rows={4}
             disabled={isBusy}
+            className="bg-background/50 backdrop-blur-sm"
           />
 
           {/* Drop zone / file picker */}
@@ -207,7 +203,7 @@ export default function CreatePostModal() {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/25 p-6 cursor-pointer hover:border-primary/40 hover:bg-muted/30 transition-colors"
+              className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/25 p-6 cursor-pointer hover:border-primary/40 hover:bg-accent/30 transition-all duration-300"
             >
               <ImagePlus size={28} className="text-muted-foreground" />
               <p className="text-sm text-muted-foreground text-center">
@@ -236,7 +232,7 @@ export default function CreatePostModal() {
               {files.map((f, i) => (
                 <div
                   key={i}
-                  className="relative rounded-lg overflow-hidden border bg-muted aspect-video group"
+                  className="relative rounded-xl overflow-hidden border bg-muted aspect-video group"
                 >
                   {f.isVideo ? (
                     <video
@@ -256,7 +252,7 @@ export default function CreatePostModal() {
                     <button
                       type="button"
                       onClick={() => removeFile(i)}
-                      className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
+                      className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-black/80 hover:scale-110"
                     >
                       <X size={14} />
                     </button>
@@ -278,7 +274,7 @@ export default function CreatePostModal() {
               </div>
               <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-primary transition-all duration-300"
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-purple-500 transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
@@ -289,7 +285,7 @@ export default function CreatePostModal() {
           <Button
             onClick={handleCreate}
             disabled={isBusy}
-            className="w-full"
+            className="w-full transition-all duration-300 hover:shadow-lg hover:shadow-primary/25"
           >
             {isBusy ? (
               <span className="flex items-center gap-2">

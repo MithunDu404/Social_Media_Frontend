@@ -6,6 +6,7 @@ import { fetchPostById, toggleLikePost, deletePost } from "@/lib/posts";
 import CommentSection from "@/components/post/commentSection";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import Link from "next/link";
 import { ArrowLeft, Heart, Trash2, Edit2 } from "lucide-react";
 import EditPostModal from "@/components/post/editPostModal";
@@ -28,6 +29,7 @@ export default function PostDetailPage() {
     const queryClient = useQueryClient();
     const id = parseInt(postId);
     const [editOpen, setEditOpen] = useState(false);
+    const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
     const { data: post, isLoading } = useQuery({
         queryKey: ["post", id],
@@ -60,7 +62,7 @@ export default function PostDetailPage() {
         return (
             <div className="mx-auto max-w-2xl p-4 space-y-4 animate-pulse">
                 <div className="h-4 w-24 bg-muted rounded" />
-                <div className="rounded-xl border bg-card p-6 space-y-4">
+                <div className="rounded-2xl glass-card p-6 space-y-4">
                     <div className="flex gap-3">
                         <div className="h-10 w-10 rounded-full bg-muted" />
                         <div className="space-y-2 flex-1">
@@ -90,16 +92,16 @@ export default function PostDetailPage() {
 
     return (
         <div className="mx-auto max-w-2xl p-4 space-y-4 overflow-y-auto h-full no-scrollbar pb-12">
-            <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-1.5">
+            <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-1.5 animate-fade-in">
                 <ArrowLeft size={16} />
                 Back
             </Button>
 
             {/* Post */}
-            <div className="rounded-xl border bg-card p-5 space-y-4">
+            <div className="rounded-2xl glass-card p-5 space-y-4 animate-fade-in">
                 <div className="flex items-center justify-between">
                     <Link href={`/profile/${post.user.id}`} className="flex items-center gap-2.5 group">
-                        <div className="h-10 w-10 rounded-full bg-muted overflow-hidden flex items-center justify-center font-bold">
+                        <div className="h-10 w-10 rounded-full bg-muted overflow-hidden flex items-center justify-center font-bold ring-1 ring-border transition-all duration-300 group-hover:ring-primary/50">
                             {post.user.picture_url ? (
                                 <img src={post.user.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             ) : (
@@ -122,7 +124,7 @@ export default function PostDetailPage() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="text-muted-foreground hover:text-foreground h-8 w-8"
+                                className="text-muted-foreground hover:text-foreground h-8 w-8 transition-colors duration-200"
                                 onClick={() => setEditOpen(true)}
                             >
                                 <Edit2 size={16} />
@@ -130,7 +132,7 @@ export default function PostDetailPage() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="text-muted-foreground hover:text-destructive h-8 w-8"
+                                className="text-muted-foreground hover:text-destructive h-8 w-8 transition-colors duration-200"
                                 onClick={() => deleteMutation.mutate()}
                                 disabled={deleteMutation.isPending}
                             >
@@ -146,11 +148,16 @@ export default function PostDetailPage() {
                 </div>
 
                 {post.medias && post.medias.length > 0 && (
-                    <div className={`grid gap-1 overflow-hidden rounded-lg ${post.medias.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+                    <div className={`grid gap-1 overflow-hidden rounded-xl ${post.medias.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
                         {post.medias.map((media, i) => (
-                            <div key={i} className="aspect-video overflow-hidden">
+                            <div key={i} className="aspect-video overflow-hidden rounded-lg">
                                 {media.content_type.startsWith("image") ? (
-                                    <img src={media.url} alt="Post media" className="w-full h-full object-cover" />
+                                    <img 
+                                        src={media.url} 
+                                        alt="Post media" 
+                                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 cursor-pointer" 
+                                        onClick={(e) => { e.preventDefault(); setFullScreenImage(media.url); }}
+                                    />
                                 ) : (
                                     <video src={media.url} controls className="w-full h-full" />
                                 )}
@@ -159,25 +166,34 @@ export default function PostDetailPage() {
                     </div>
                 )}
 
-                <div className="flex items-center gap-1 pt-1 border-t">
+                <div className="flex items-center gap-1 pt-1 border-t border-border/50">
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => likeMutation.mutate()}
-                        className={`flex items-center gap-1.5 h-8 px-2 ${post.isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"}`}
+                        className={`flex items-center gap-1.5 h-8 px-2 transition-all duration-300 ${post.isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"}`}
                     >
-                        <Heart size={16} className={post.isLiked ? "fill-red-500" : ""} />
+                        <Heart size={16} className={`transition-all duration-300 ${post.isLiked ? "fill-red-500 scale-110" : ""}`} />
                         <span className="text-xs font-medium">{post.likeCount} likes</span>
                     </Button>
                 </div>
             </div>
 
             {/* Comments */}
-            <div className="rounded-xl border bg-card p-5">
+            <div className="rounded-2xl glass-card p-5 animate-fade-in" style={{ animationDelay: "0.1s" }}>
                 <CommentSection postId={id} />
             </div>
 
             <EditPostModal post={post} open={editOpen} onOpenChange={setEditOpen} />
+
+            <Dialog open={!!fullScreenImage} onOpenChange={(open) => !open && setFullScreenImage(null)}>
+                <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-transparent shadow-none flex items-center justify-center [&>button]:text-white [&>button]:bg-black/50 [&>button]:hover:bg-black/80 [&>button]:p-2 [&>button]:rounded-full">
+                    <DialogTitle className="sr-only">Image preview</DialogTitle>
+                    {fullScreenImage && (
+                        <img src={fullScreenImage} alt="Full screen" className="max-w-full max-h-[90vh] object-contain rounded-lg" />
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

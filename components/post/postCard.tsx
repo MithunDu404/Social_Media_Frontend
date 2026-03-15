@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Heart, MessageCircle, Trash2, MoreHorizontal, Edit2 } from "lucide-react";
 import { Post } from "@/types/post";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,13 +35,14 @@ export default function PostCard({ post, onLike, onDelete }: Props) {
   const user = useAuthStore((s) => s.user);
   const isOwner = user?.id === post.user_id;
   const [editOpen, setEditOpen] = useState(false);
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
   return (
-    <div className="rounded-xl border bg-card p-4 space-y-3 hover:bg-muted/30 transition-colors">
+    <div className="rounded-2xl glass-card p-4 space-y-3 hover-lift transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between">
         <Link href={`/profile/${post.user.id}`} className="flex items-center gap-2.5 group">
-          <div className="h-9 w-9 shrink-0 rounded-full bg-muted flex items-center justify-center text-sm font-bold overflow-hidden">
+          <div className="h-9 w-9 shrink-0 rounded-full bg-muted flex items-center justify-center text-sm font-bold overflow-hidden ring-1 ring-border transition-all duration-300 group-hover:ring-primary/50">
             {post.user.picture_url ? (
               <img src={post.user.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             ) : (
@@ -65,7 +67,7 @@ export default function PostCard({ post, onLike, onDelete }: Props) {
                 <MoreHorizontal size={16} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="glass-card border-0">
               <DropdownMenuItem onClick={() => setEditOpen(true)}>
                 <Edit2 size={14} className="mr-2" />
                 Edit post
@@ -97,15 +99,20 @@ export default function PostCard({ post, onLike, onDelete }: Props) {
       {/* Media */}
       {post.medias && post.medias.length > 0 && (
         <div
-          className={`grid gap-1 overflow-hidden rounded-lg ${post.medias.length === 1 ? "grid-cols-1" :
+          className={`grid gap-1 overflow-hidden rounded-xl ${post.medias.length === 1 ? "grid-cols-1" :
             post.medias.length === 2 ? "grid-cols-2" :
               "grid-cols-2"
             }`}
         >
           {post.medias.slice(0, 4).map((media, i) => (
-            <div key={i} className="aspect-video overflow-hidden">
+            <div key={i} className="aspect-video overflow-hidden rounded-lg">
               {media.content_type.startsWith("image") ? (
-                <img src={media.url} alt="Post media" className="w-full h-full object-cover" />
+                <img 
+                  src={media.url} 
+                  alt="Post media" 
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105 cursor-pointer" 
+                  onClick={(e) => { e.preventDefault(); setFullScreenImage(media.url); }}
+                />
               ) : (
                 <video src={media.url} controls className="w-full h-full object-cover" />
               )}
@@ -120,19 +127,28 @@ export default function PostCard({ post, onLike, onDelete }: Props) {
           variant="ghost"
           size="sm"
           onClick={onLike}
-          className={`flex items-center gap-1.5 h-8 px-2 ${post.isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"}`}
+          className={`flex items-center gap-1.5 h-8 px-2 transition-all duration-300 ${post.isLiked ? "text-red-500" : "text-muted-foreground hover:text-red-500"}`}
         >
-          <Heart size={16} className={post.isLiked ? "fill-red-500" : ""} />
+          <Heart size={16} className={`transition-all duration-300 ${post.isLiked ? "fill-red-500 scale-110" : ""}`} />
           <span className="text-xs font-medium">{post.likeCount}</span>
         </Button>
 
-        <Button variant="ghost" size="sm" className="flex items-center gap-1.5 h-8 px-2 text-muted-foreground" asChild>
+        <Button variant="ghost" size="sm" className="flex items-center gap-1.5 h-8 px-2 text-muted-foreground hover:text-foreground transition-colors duration-200" asChild>
           <Link href={`/post/${post.id}`}>
             <MessageCircle size={16} />
             <span className="text-xs font-medium">{post.commentCount}</span>
           </Link>
         </Button>
       </div>
+
+      <Dialog open={!!fullScreenImage} onOpenChange={(open) => !open && setFullScreenImage(null)}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 border-0 bg-transparent shadow-none flex items-center justify-center [&>button]:text-white [&>button]:bg-black/50 [&>button]:hover:bg-black/80 [&>button]:p-2 [&>button]:rounded-full">
+          <DialogTitle className="sr-only">Image preview</DialogTitle>
+          {fullScreenImage && (
+            <img src={fullScreenImage} alt="Full screen" className="max-w-full max-h-[90vh] object-contain rounded-lg" />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <EditPostModal post={post} open={editOpen} onOpenChange={setEditOpen} />
     </div>

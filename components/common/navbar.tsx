@@ -1,5 +1,5 @@
 "use client";
-// Need Changes
+
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, LogOut, MessageCircle, Home, User, Bell } from "lucide-react";
@@ -20,6 +20,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { useAuthStore } from "@/store/authStore";
+import ThemeToggle from "@/components/common/ThemeToggle";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -45,7 +46,7 @@ export default function Navbar() {
     <>
       <Link
         href="/feed"
-        className={`flex items-center gap-2 text-sm font-medium ${pathname === "/feed" ? "text-black" : "text-muted-foreground"
+        className={`flex items-center gap-2 text-sm font-medium transition-colors duration-200 ${pathname === "/feed" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
           }`}
       >
         <Home size={18} />
@@ -54,9 +55,9 @@ export default function Navbar() {
 
       <Link
         href="/messages"
-        className={`flex items-center gap-2 text-sm font-medium ${pathname.startsWith("/messages")
-            ? "text-black"
-            : "text-muted-foreground"
+        className={`flex items-center gap-2 text-sm font-medium transition-colors duration-200 ${pathname.startsWith("/messages")
+            ? "text-foreground"
+            : "text-muted-foreground hover:text-foreground"
           }`}
       >
         <MessageCircle size={18} />
@@ -65,9 +66,9 @@ export default function Navbar() {
 
       <Link
         href="/notifications"
-        className={`flex items-center gap-2 text-sm font-medium ${pathname.startsWith("/notifications")
-            ? "text-black"
-            : "text-muted-foreground"
+        className={`flex items-center gap-2 text-sm font-medium transition-colors duration-200 ${pathname.startsWith("/notifications")
+            ? "text-foreground"
+            : "text-muted-foreground hover:text-foreground"
           }`}
       >
         <Bell size={18} />
@@ -77,7 +78,7 @@ export default function Navbar() {
   );
 
   return (
-    <nav className="sticky top-0 z-50 border-b bg-background">
+    <nav className="sticky top-0 z-50 glass-navbar">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
 
         {/* Left */}
@@ -99,7 +100,7 @@ export default function Navbar() {
                 Navigation menu
               </SheetTitle>
               <div className="flex flex-col gap-6 pt-6 p-4">
-                <Link href="/feed" className="text-lg font-bold">
+                <Link href="/feed" className="text-lg font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
                   SocialApp
                 </Link>
 
@@ -107,10 +108,15 @@ export default function Navbar() {
                   <NavLinks />
                 </div>
 
+                <div className="flex items-center gap-2 mt-4">
+                  <ThemeToggle />
+                  <span className="text-sm text-muted-foreground">Toggle theme</span>
+                </div>
+
                 <Button
                   variant="outline"
                   onClick={handleLogout}
-                  className="mt-6"
+                  className="mt-2"
                 >
                   <LogOut size={16} className="mr-2" />
                   Logout
@@ -120,7 +126,7 @@ export default function Navbar() {
           </Sheet>
 
           {/* Logo */}
-          <Link href="/feed" className="text-lg font-bold">
+          <Link href="/feed" className="text-lg font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
             SocialApp
           </Link>
         </div>
@@ -131,48 +137,54 @@ export default function Navbar() {
         </div>
 
         {/* Right */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="flex cursor-pointer items-center gap-2">
-              {/* Username – desktop only */}
-              <span className="hidden text-sm font-medium md:block">
-                {user?.user_name}
-              </span>
+        <div className="flex items-center gap-2">
+          <div className="hidden md:block">
+            <ThemeToggle />
+          </div>
 
-              {/* Avatar */}
-              <Avatar>
-                <AvatarImage
-                  src={user?.picture_url ?? undefined}
-                  alt={user?.user_name ?? ""}
-                  referrerPolicy="no-referrer"
-                />
-                <AvatarFallback>
-                  {user?.user_name?.[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          </DropdownMenuTrigger>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex cursor-pointer items-center gap-2">
+                {/* Username – desktop only */}
+                <span className="hidden text-sm font-medium md:block">
+                  {user?.user_name}
+                </span>
 
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link
-                href={`/profile/${user?.id}`}
-                className="flex items-center gap-2"
+                {/* Avatar */}
+                <Avatar className="ring-2 ring-primary/20 transition-all duration-300 hover:ring-primary/50">
+                  <AvatarImage
+                    src={user?.picture_url ?? undefined}
+                    alt={user?.user_name ?? ""}
+                    referrerPolicy="no-referrer"
+                  />
+                  <AvatarFallback>
+                    {user?.user_name?.[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="glass-card">
+              <DropdownMenuItem asChild>
+                <Link
+                  href={`/profile/${user?.id}`}
+                  className="flex items-center gap-2"
+                >
+                  <User size={16} />
+                  Profile
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="text-destructive focus:text-destructive"
               >
-                <User size={16} />
-                Profile
-              </Link>
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              onClick={handleLogout}
-              className="text-red-600"
-            >
-              <LogOut size={16} className="mr-2" />
-              Logout
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <LogOut size={16} className="mr-2" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </nav>
   );

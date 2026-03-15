@@ -10,6 +10,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
+import ThemeToggle from "@/components/common/ThemeToggle";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -48,16 +49,21 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md shadow-lg">
+    <div className="relative flex min-h-screen items-center justify-center bg-auth-gradient p-4">
+      {/* Theme toggle in corner */}
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
+      <Card className="w-full max-w-md glass-card animate-fade-in border-0">
         <CardContent className="space-y-5 p-8">
           <div className="text-center space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight">Create account</h1>
+            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Create account</h1>
             <p className="text-sm text-muted-foreground">Join the community today</p>
           </div>
 
           {error && (
-            <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive animate-fade-in">
               {error}
             </div>
           )}
@@ -70,6 +76,7 @@ export default function RegisterPage() {
                 placeholder="cooluser"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
+                className="bg-background/50 backdrop-blur-sm"
               />
             </div>
             <div className="space-y-1.5">
@@ -80,6 +87,7 @@ export default function RegisterPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="bg-background/50 backdrop-blur-sm"
               />
             </div>
             <div className="space-y-1.5">
@@ -91,11 +99,12 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleRegister()}
+                className="bg-background/50 backdrop-blur-sm"
               />
             </div>
           </div>
 
-          <Button className="w-full" onClick={handleRegister} disabled={loading}>
+          <Button className="w-full transition-all duration-300 hover:shadow-lg hover:shadow-primary/25" onClick={handleRegister} disabled={loading}>
             {loading ? "Creating account..." : "Create Account"}
           </Button>
 
@@ -104,7 +113,7 @@ export default function RegisterPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">or</span>
+              <span className="bg-transparent px-2 text-muted-foreground backdrop-blur-sm">or</span>
             </div>
           </div>
 
@@ -112,7 +121,7 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-primary hover:underline">
+            <Link href="/login" className="font-semibold text-primary hover:underline transition-colors">
               Sign in
             </Link>
           </p>

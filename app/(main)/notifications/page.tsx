@@ -26,7 +26,7 @@ function NotificationSkeleton() {
     return (
         <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-                <div key={i} className="rounded-xl border bg-card p-4 flex items-center gap-3 animate-pulse">
+                <div key={i} className="rounded-2xl glass-card p-4 flex items-center gap-3 animate-pulse">
                     <div className="h-10 w-10 rounded-full bg-muted shrink-0" />
                     <div className="flex-1 space-y-2">
                         <div className="h-3 w-48 bg-muted rounded" />
@@ -85,7 +85,7 @@ export default function NotificationsPage() {
 
     return (
         <div className="mx-auto max-w-2xl p-4 h-full overflow-y-auto no-scrollbar pb-12 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between animate-fade-in">
                 <div>
                     <h1 className="text-2xl font-bold">Notifications</h1>
                     {unreadCount > 0 && (
@@ -94,11 +94,11 @@ export default function NotificationsPage() {
                 </div>
                 <div className="flex gap-2">
                     {unreadCount > 0 && (
-                        <Button variant="outline" size="sm" onClick={() => markAllReadMutation.mutate()} disabled={markAllReadMutation.isPending}>
+                        <Button variant="outline" size="sm" onClick={() => markAllReadMutation.mutate()} disabled={markAllReadMutation.isPending} className="transition-all duration-200">
                             Mark all read
                         </Button>
                     )}
-                    <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
+                    <Button variant="ghost" size="sm" className="text-muted-foreground transition-all duration-200" onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
                         Clear read
                     </Button>
                 </div>
@@ -107,24 +107,25 @@ export default function NotificationsPage() {
             {isLoading ? (
                 <NotificationSkeleton />
             ) : !notifications || notifications.length === 0 ? (
-                <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground text-sm">
+                <div className="rounded-2xl glass-card p-10 text-center text-muted-foreground text-sm animate-fade-in">
                     No notifications yet.
                 </div>
             ) : (
                 <div className="space-y-2">
-                    {notifications.map((notif) => {
+                    {notifications.map((notif, index) => {
                         const config = reasonConfig[notif.reason] ?? { label: "interacted with you.", icon: null, color: "text-muted-foreground" };
                         return (
                             <div
                                 key={notif.id}
-                                className={`flex items-center gap-3 p-4 rounded-xl border transition-colors cursor-pointer ${notif.is_read ? "bg-card" : "bg-primary/5 border-primary/20"}`}
+                                className={`flex items-center gap-3 p-4 rounded-2xl transition-all duration-300 cursor-pointer animate-fade-in hover-lift ${notif.is_read ? "glass-card" : "glass-card ring-1 ring-primary/20"}`}
+                                style={{ animationDelay: `${index * 0.03}s` }}
                                 onClick={() => { if (!notif.is_read) markReadMutation.mutate(notif.id); }}
                             >
                                 {/* Notification icon */}
                                 <div className={`shrink-0 ${config.color}`}>{config.icon}</div>
 
                                 {/* Avatar */}
-                                <div className="h-9 w-9 shrink-0 rounded-full bg-muted flex items-center justify-center text-xs font-bold overflow-hidden">
+                                <div className="h-9 w-9 shrink-0 rounded-full bg-muted flex items-center justify-center text-xs font-bold overflow-hidden ring-1 ring-border">
                                     {notif.creator?.picture_url ? (
                                         <img src={notif.creator.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                     ) : (
@@ -142,7 +143,7 @@ export default function NotificationsPage() {
                                 </div>
 
                                 {!notif.is_read && (
-                                    <div className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                                    <div className="h-2 w-2 shrink-0 rounded-full bg-primary animate-pulse" />
                                 )}
                             </div>
                         );

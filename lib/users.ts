@@ -51,6 +51,7 @@ export const updateProfile = async (
         about?: string;
         location?: string;
         phone?: string;
+        picture_url?: string;
     }
 ): Promise<UserProfile> => {
     const res = await api.put(`/users/${userId}`, data);

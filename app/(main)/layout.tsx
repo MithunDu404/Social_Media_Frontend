@@ -5,33 +5,28 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Navbar from "@/components/common/navbar";
 
-// May be Need changes
-
 export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const isAuth = useAuthStore((s) => s.isAuthenticated);
-  const {hasHydrated} = useAuthStore();
+  const { hasHydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
-    if(!hasHydrated) return;
+    if (!hasHydrated) return;
     if (!isAuth) router.push("/login");
-  }, [hasHydrated,isAuth]);
+  }, [hasHydrated, isAuth]);
 
-  if(!hasHydrated) return null;
+  if (!hasHydrated) return null;
 
-  return(
-    <>
-      <div className="flex h-screen flex-col">
-        <Navbar />
-        <div className="flex-1 overflow-hidden">
-          {children}
-        </div>
+  return (
+    <div className="flex h-screen flex-col bg-page-gradient">
+      <Navbar />
+      <div className="flex-1 overflow-hidden">
+        {children}
       </div>
-    </>
-
-  )
+    </div>
+  );
 }

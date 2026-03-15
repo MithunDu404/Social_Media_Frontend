@@ -15,7 +15,7 @@ function FeedSkeleton() {
   return (
     <div className="space-y-4">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="rounded-xl border bg-card p-4 space-y-3 animate-pulse">
+        <div key={i} className="rounded-2xl glass-card p-4 space-y-3 animate-pulse">
           <div className="flex items-center gap-2.5">
             <div className="h-9 w-9 rounded-full bg-muted" />
             <div className="space-y-1.5">
@@ -46,7 +46,6 @@ export default function FeedPage() {
   const { data: suggestedUsers } = useQuery({
     queryKey: ["suggestedUsers"],
     queryFn: () => searchUsers(),
-    // Don't refetch within 2 minutes so the optimistic cache update isn't stomped
     staleTime: 2 * 60 * 1000,
   });
 
@@ -81,10 +80,8 @@ export default function FeedPage() {
   const followMutation = useMutation({
     mutationFn: (userId: number) => toggleFollow(userId),
     onMutate: async (userId) => {
-      // Cancel any in-flight refetch so it doesn't overwrite our optimistic update
       await queryClient.cancelQueries({ queryKey: ["suggestedUsers"] });
       const previous = queryClient.getQueryData<User[]>(["suggestedUsers"]);
-      // Optimistic update: immediately flip isFollowing in the cache
       queryClient.setQueryData<User[]>(["suggestedUsers"], (old) =>
         old?.map((u) =>
           u.id === userId ? { ...u, isFollowing: !u.isFollowing } : u
@@ -93,8 +90,6 @@ export default function FeedPage() {
       return { previous };
     },
     onSuccess: (data, userId) => {
-      // Permanently write the server-confirmed value so future refetches
-      // don't clobber the state (data.following is the source of truth)
       queryClient.setQueryData<User[]>(["suggestedUsers"], (old) =>
         old?.map((u) =>
           u.id === userId ? { ...u, isFollowing: data.following } : u
@@ -102,12 +97,10 @@ export default function FeedPage() {
       );
     },
     onError: (_, __, context) => {
-      // Roll back on failure
       queryClient.setQueryData(["suggestedUsers"], context?.previous);
     },
   });
 
-  // Filter out own user and already-followed users from suggestions
   const suggestions =
     suggestedUsers
       ?.filter((u) => u.id !== user?.id && !u.isFollowing)
@@ -119,19 +112,21 @@ export default function FeedPage() {
 
         {/* Left – Profile Card */}
         <aside className="hidden md:block min-h-0">
-          <div className="sticky top-3 rounded-xl border p-4 flex flex-col items-center gap-4 bg-card">
-            <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center text-2xl font-bold overflow-hidden">
-              {user?.picture_url ? (
-                <img src={user.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-              ) : (
-                user?.user_name?.charAt(0).toUpperCase()
-              )}
+          <div className="sticky top-3 rounded-2xl glass-card p-5 flex flex-col items-center gap-4 animate-fade-in">
+            <div className="avatar-ring">
+              <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center text-2xl font-bold overflow-hidden">
+                {user?.picture_url ? (
+                  <img src={user.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  user?.user_name?.charAt(0).toUpperCase()
+                )}
+              </div>
             </div>
             <div className="text-center">
               <p className="font-semibold text-lg">{user?.user_name}</p>
               <p className="text-sm text-muted-foreground">{user?.email}</p>
             </div>
-            <Button variant="outline" className="w-full mt-2" asChild>
+            <Button variant="outline" className="w-full mt-2 transition-all duration-300 hover:shadow-md" asChild>
               <Link href={`/profile/${user?.id}`}>View Profile</Link>
             </Button>
           </div>
@@ -139,38 +134,39 @@ export default function FeedPage() {
 
         {/* Center – Feed */}
         <main className="min-h-0 min-w-0 space-y-4 overflow-y-auto no-scrollbar pb-20 md:pb-4">
-          <div className="rounded-xl border p-4">
+          <div className="rounded-2xl glass-card p-4 animate-fade-in">
             <CreatePostModal />
           </div>
 
           {isLoading ? (
             <FeedSkeleton />
           ) : posts && posts.length > 0 ? (
-            posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onLike={() => likeMutation.mutate(post.id)}
-                onDelete={user?.id === post.user_id ? () => deleteMutation.mutate(post.id) : undefined}
-              />
+            posts.map((post, index) => (
+              <div key={post.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+                <PostCard
+                  post={post}
+                  onLike={() => likeMutation.mutate(post.id)}
+                  onDelete={user?.id === post.user_id ? () => deleteMutation.mutate(post.id) : undefined}
+                />
+              </div>
             ))
           ) : (
-            <div className="rounded-xl border bg-card p-10 text-center text-muted-foreground">
+            <div className="rounded-2xl glass-card p-10 text-center text-muted-foreground animate-fade-in">
               <p className="text-lg font-medium">Your feed is empty</p>
               <p className="text-sm mt-1">Follow some people to see their posts here.</p>
             </div>
           )}
         </main>
 
-        {/* Right – Suggested Users with Follow Button */}
+        {/* Right – Suggested Users */}
         <aside className="hidden md:block min-h-0">
-          <div className="sticky top-3 rounded-xl border p-4 bg-card space-y-4">
+          <div className="sticky top-3 rounded-2xl glass-card p-5 space-y-4 animate-fade-in" style={{ animationDelay: "0.1s" }}>
             <p className="text-sm font-semibold">Suggested for you</p>
             <div className="space-y-3">
               {suggestions.length > 0 ? (
                 suggestions.map((u) => (
-                  <div key={u.id} className="flex items-center gap-2.5">
-                    <Link href={`/profile/${u.id}`} className="h-8 w-8 shrink-0 rounded-full bg-muted flex items-center justify-center text-xs font-bold overflow-hidden">
+                  <div key={u.id} className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-accent/50 transition-colors duration-200">
+                    <Link href={`/profile/${u.id}`} className="h-8 w-8 shrink-0 rounded-full bg-muted flex items-center justify-center text-xs font-bold overflow-hidden ring-1 ring-border">
                       {u.picture_url ? (
                         <img src={u.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
@@ -185,9 +181,9 @@ export default function FeedPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className={`h-auto py-1 px-2 text-xs font-semibold ${u.isFollowing
+                      className={`h-auto py-1 px-2 text-xs font-semibold transition-colors duration-200 ${u.isFollowing
                         ? "text-muted-foreground"
-                        : "text-primary"
+                        : "text-primary hover:text-primary/80"
                         }`}
                       onClick={() => followMutation.mutate(u.id)}
                       disabled={followMutation.isPending}

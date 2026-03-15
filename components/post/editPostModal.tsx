@@ -59,7 +59,7 @@ export default function EditPostModal({ post, open, onOpenChange }: EditPostModa
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="glass-card border-0">
                 <DialogHeader>
                     <DialogTitle>Edit post</DialogTitle>
                 </DialogHeader>
@@ -69,18 +69,20 @@ export default function EditPostModal({ post, open, onOpenChange }: EditPostModa
                         placeholder="Post Title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
+                        className="bg-background/50 backdrop-blur-sm"
                     />
                     <Textarea
-                        placeholder="What’s on your mind? (Blog content)"
+                        placeholder="What's on your mind? (Blog content)"
                         value={blog}
                         onChange={(e) => setBlog(e.target.value)}
                         rows={4}
+                        className="bg-background/50 backdrop-blur-sm"
                     />
 
                     <Button
                         onClick={handleUpdate}
                         disabled={updateMutation.isPending}
-                        className="w-full"
+                        className="w-full transition-all duration-300 hover:shadow-lg hover:shadow-primary/25"
                     >
                         {updateMutation.isPending ? "Saving..." : "Save Changes"}
                     </Button>

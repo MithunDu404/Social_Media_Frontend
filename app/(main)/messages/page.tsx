@@ -47,7 +47,6 @@ export default function MessagesPage() {
     refetchInterval: 3000,
   });
 
-  // Fetch target user profile if we don't have a conversation with them yet
   const selectedConv = conversations?.find((c) => c.user.id === selectedUserId);
   const { data: targetUser } = useQuery({
     queryKey: ["user", selectedUserId],
@@ -55,7 +54,6 @@ export default function MessagesPage() {
     enabled: !!selectedUserId && !selectedConv,
   });
 
-  // Mark unread messages as read when they are displayed
   useEffect(() => {
     if (messages && loggedUser && selectedUserId) {
       const unreadMessages = messages.filter(
@@ -63,12 +61,10 @@ export default function MessagesPage() {
       );
 
       if (unreadMessages.length > 0) {
-        // Optimistically update local state first to prevent multiple calls
         queryClient.setQueryData<Message[]>(["messages", selectedUserId], (old) =>
           old?.map((m) => (m.receiver_id === loggedUser.id && !m.is_read ? { ...m, is_read: true } : m))
         );
 
-        // Also update the conversation list optimisticly if it's the last message
         queryClient.setQueryData<any[]>(["conversations"], (old) =>
           old?.map((c) => {
              if (c.user.id === selectedUserId && c.lastMessage.receiver_id === loggedUser.id && !c.lastMessage.is_read) {
@@ -78,7 +74,6 @@ export default function MessagesPage() {
           })
         );
 
-        // Send backend requests
         unreadMessages.forEach((msg) => {
           markMessageAsRead(msg.id).catch(console.error);
         });
@@ -128,10 +123,10 @@ export default function MessagesPage() {
   const displayUser = selectedConv?.user || targetUser;
 
   return (
-    <div className="flex h-[calc(100vh-56px)] overflow-hidden border-t bg-background">
+    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-background">
       {/* Sidebar */}
-      <div className={`flex flex-col border-r w-full md:w-80 shrink-0 ${selectedUserId ? "hidden md:flex" : "flex"}`}>
-        <div className="p-4 border-b">
+      <div className={`flex flex-col w-full md:w-80 shrink-0 glass ${selectedUserId ? "hidden md:flex" : "flex"}`}>
+        <div className="p-4 border-b border-border/50">
           <h2 className="text-lg font-bold">Messages</h2>
         </div>
         <div className="flex-1 overflow-y-auto no-scrollbar">
@@ -159,9 +154,9 @@ export default function MessagesPage() {
                 <div
                   key={conv.user.id}
                   onClick={() => setSelectedUserId(conv.user.id)}
-                  className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/50 transition rounded-none relative ${selectedUserId === conv.user.id ? "bg-muted/60" : ""}`}
+                  className={`flex items-center gap-3 p-3 cursor-pointer transition-all duration-200 relative ${selectedUserId === conv.user.id ? "bg-accent/60" : "hover:bg-accent/30"}`}
                 >
-                  <div className="h-10 w-10 shrink-0 rounded-full bg-muted flex items-center justify-center font-bold text-sm overflow-hidden">
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-muted flex items-center justify-center font-bold text-sm overflow-hidden ring-1 ring-border">
                     {conv.user.picture_url ? (
                       <img src={conv.user.picture_url} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
                     ) : (
@@ -179,7 +174,7 @@ export default function MessagesPage() {
                   </span>
                   
                   {isUnread && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-primary rounded-full"></div>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-primary rounded-full animate-pulse"></div>
                   )}
                 </div>
               );
@@ -190,13 +185,13 @@ export default function MessagesPage() {
 
       {/* Chat area */}
       {selectedUserId ? (
-        <div className={`flex flex-col flex-1 min-w-0 ${!selectedUserId ? "hidden md:flex" : "flex"}`}>
+        <div className={`flex flex-col flex-1 min-w-0 border-l border-border/50 ${!selectedUserId ? "hidden md:flex" : "flex"}`}>
           {/* Chat header */}
-          <div className="flex h-14 shrink-0 items-center gap-3 border-b px-4">
+          <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border/50 px-4 glass">
             <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setSelectedUserId(null)}>
               <ArrowLeft size={16} />
             </Button>
-            <div className="h-8 w-8 shrink-0 rounded-full bg-muted flex items-center justify-center text-xs font-bold overflow-hidden">
+            <div className="h-8 w-8 shrink-0 rounded-full bg-muted flex items-center justify-center text-xs font-bold overflow-hidden ring-1 ring-border">
               {displayUser?.picture_url ? (
                 <img src={displayUser.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
@@ -216,12 +211,14 @@ export default function MessagesPage() {
               </div>
             ) : !messages || messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-muted-foreground text-sm space-y-3">
-                <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-2xl font-bold overflow-hidden">
-                   {displayUser?.picture_url ? (
-                    <img src={displayUser.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  ) : (
-                    (displayUser?.user_name ?? "?").charAt(0).toUpperCase()
-                  )}
+                <div className="avatar-ring">
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center text-2xl font-bold overflow-hidden">
+                     {displayUser?.picture_url ? (
+                      <img src={displayUser.picture_url} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      (displayUser?.user_name ?? "?").charAt(0).toUpperCase()
+                    )}
+                  </div>
                 </div>
                 <p>Start the conversation with {displayUser?.user_name || "this user"}</p>
               </div>
@@ -229,8 +226,8 @@ export default function MessagesPage() {
               messages.map((msg) => {
                 const isMine = msg.sender_id === loggedUser?.id;
                 return (
-                  <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[70%] rounded-2xl px-4 py-2 text-sm ${isMine ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted rounded-bl-sm"}`}>
+                  <div key={msg.id} className={`flex ${isMine ? "justify-end" : "justify-start"} animate-fade-in`}>
+                    <div className={`max-w-[70%] rounded-2xl px-4 py-2 text-sm transition-all duration-200 ${isMine ? "bg-gradient-to-br from-primary to-purple-600 text-primary-foreground rounded-br-sm" : "glass rounded-bl-sm"}`}>
                       <p className="break-words">{msg.message}</p>
                       <div className={`flex items-center gap-1 mt-1 justify-end ${isMine ? "text-primary-foreground/60 text-right" : "text-muted-foreground"}`}>
                         <span className="text-[10px]">{timeAgo(msg.createdAt)}</span>
@@ -249,26 +246,26 @@ export default function MessagesPage() {
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t flex gap-2 shrink-0">
+          <div className="p-4 border-t border-border/50 flex gap-2 shrink-0 glass">
             <Input
               placeholder="Type a message..."
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-              className="flex-1"
+              className="flex-1 bg-background/50 backdrop-blur-sm"
             />
             <Button
               onClick={handleSend}
               disabled={sendMutation.isPending || !newMessage.trim()}
               size="icon"
-              className="rounded-full"
+              className="rounded-full transition-all duration-300 hover:shadow-lg hover:shadow-primary/25"
             >
               <Send size={16} />
             </Button>
           </div>
         </div>
       ) : (
-        <div className="hidden md:flex flex-1 items-center justify-center text-sm text-muted-foreground">
+        <div className="hidden md:flex flex-1 items-center justify-center text-sm text-muted-foreground border-l border-border/50">
           Select a conversation to start chatting
         </div>
       )}
