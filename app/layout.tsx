@@ -14,6 +14,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "SocialApp",
   description: "A modern social media platform",
+  icons: {
+    icon: "/social_favicon_1773596725126.png",
+    apple: "/social_favicon_1773596725126.png",
+  },
 };
 
 export default function RootLayout({
