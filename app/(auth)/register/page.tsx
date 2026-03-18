@@ -76,7 +76,7 @@ export default function RegisterPage() {
                 placeholder="cooluser"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
-                className="bg-background/50 backdrop-blur-sm"
+                className="bg-background/50"
               />
             </div>
             <div className="space-y-1.5">
@@ -87,7 +87,7 @@ export default function RegisterPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-background/50 backdrop-blur-sm"
+                className="bg-background/50"
               />
             </div>
             <div className="space-y-1.5">
@@ -99,7 +99,7 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleRegister()}
-                className="bg-background/50 backdrop-blur-sm"
+                className="bg-background/50"
               />
             </div>
           </div>

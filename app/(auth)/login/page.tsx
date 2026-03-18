@@ -69,7 +69,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                className="bg-background/50 backdrop-blur-sm"
+                className="bg-background/50"
               />
             </div>
 
@@ -82,7 +82,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                className="bg-background/50 backdrop-blur-sm"
+                className="bg-background/50"
               />
             </div>
           </div>

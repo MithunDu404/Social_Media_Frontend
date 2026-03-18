@@ -282,3 +282,31 @@
 .dark .hover-lift:hover {
   box-shadow: 0 4px 16px -4px oklch(0 0 0 / 15%);
 }
+
+/* ─── Autofill Fix ────────────────────────────────────── */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px oklch(0.13 0.015 265) inset !important;
+  -webkit-text-fill-color: oklch(0.94 0.005 264) !important;
+  caret-color: oklch(0.94 0.005 264) !important;
+}
+
+:root input:-webkit-autofill,
+:root input:-webkit-autofill:hover, 
+:root input:-webkit-autofill:focus, 
+:root input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px oklch(0.985 0.002 247) inset !important;
+  -webkit-text-fill-color: oklch(0.145 0.015 260) !important;
+  caret-color: oklch(0.145 0.015 260) !important;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover, 
+.dark input:-webkit-autofill:focus, 
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px oklch(0.18 0.015 265 / 100%) inset !important;
+  -webkit-text-fill-color: oklch(0.94 0.005 264) !important;
+  caret-color: oklch(0.94 0.005 264) !important;
+}
